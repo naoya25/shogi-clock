@@ -1,7 +1,9 @@
 import { useClock } from "../features/clock/useClock";
 import { parseConfigFromJson } from "../features/rules/load";
+import { beep, disableBeep, enableBeep } from "../features/audio/beep";
 import { formatMs } from "../lib/formatter";
 import sampleText from "../features/rules/builtins/sample.json?raw";
+import { useState } from "react";
 
 export default function TimerPage() {
   const config = parseConfigFromJson(sampleText);
@@ -9,6 +11,26 @@ export default function TimerPage() {
     config.time.player1.mainSeconds,
     config.time.player2.mainSeconds,
   ]);
+
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+
+  const tapWithBeep = (player: 0 | 1) => {
+    if (state.finished) return;
+
+    const nextActive = player === 0 ? 1 : 0;
+    const willSwitch = state.active !== nextActive;
+
+    if (isAudioEnabled && willSwitch) {
+      try {
+        enableBeep();
+        beep();
+      } catch {
+        // no-op
+      }
+    }
+
+    tap(player);
+  };
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col">
@@ -25,7 +47,7 @@ export default function TimerPage() {
                 : "bg-emerald-700 text-emerald-50"
               : "bg-gray-700 text-white"
           }`}
-          onClick={() => tap(0)}
+          onClick={() => tapWithBeep(0)}
         >
           <div className="h-full flex flex-col items-center justify-center">
             <div className="text-6xl font-mono">
@@ -42,7 +64,7 @@ export default function TimerPage() {
                 : "bg-emerald-700 text-emerald-50"
               : "bg-gray-700 text-white"
           }`}
-          onClick={() => tap(1)}
+          onClick={() => tapWithBeep(1)}
         >
           <div className="h-full flex flex-col items-center justify-center">
             <div className="text-6xl font-mono">
@@ -59,6 +81,24 @@ export default function TimerPage() {
           onClick={state.running ? pause : resume}
         >
           {state.running ? "一時停止" : "再開"}
+        </button>
+        <button
+          onClick={async () => {
+            if (isAudioEnabled) {
+              setIsAudioEnabled(false);
+              await disableBeep();
+              return;
+            }
+            setIsAudioEnabled(true);
+            enableBeep();
+          }}
+          className={`rounded-md px-3 py-2 text-sm transition-colors ${
+            isAudioEnabled
+              ? "bg-emerald-700 hover:bg-emerald-600"
+              : "bg-gray-800 hover:bg-gray-700"
+          }`}
+        >
+          {isAudioEnabled ? "音声: ON" : "音声: OFF"}
         </button>
       </div>
     </div>
