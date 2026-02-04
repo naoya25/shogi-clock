@@ -2,13 +2,13 @@
 
 将棋用の**対局時計（2人用）**です。画面をタップして手番を切り替えます。
 
+![timer_page](screenshots/timer_page.png)
+![settings_page](screenshots/settings_page.png)
+
 ## 使い方
 
-- **左右の時間表示**: タップで手番切り替え（初回タップ時に開始）
-- **一時停止 / 再開**
-- **音声: ON / OFF**（効果音・ボイス）
-
-※ 現状の持ち時間は `src/features/rules/builtins/sample.json` を読み込んでいます。
+- タップで手番切り替え
+- 設定画面からルールを変更できます
 
 ## 開発
 
@@ -28,7 +28,7 @@ npm run preview
 
 
 ## TODO
-- 手数表示
-- ルール追加機能
-- PWA化
+- PC版は任意のキーボードで手番交代可能にする
 - GitHub Pagesでリリース
+- PWA化
+- ios動作確認
