@@ -1,6 +1,14 @@
 import { isInt, isObject, isString } from "../../lib/validate";
 import type { ClockConfigV1 } from "./types";
 
+const ANNOUNCE_ALLOWED_MINUTES = new Set([
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60,
+]);
+
+const ANNOUNCE_ALLOWED_SECONDS = new Set([10, 20, 30, 40, 50]);
+
+const ANNOUNCE_ALLOWED_COUNT_DOWN = 10;
+
 export function validateConfigV1(raw: unknown): ClockConfigV1 {
   if (!isObject(raw))
     throw new Error("JSONのトップがオブジェクトではありません");
@@ -49,18 +57,32 @@ export function validateConfigV1(raw: unknown): ClockConfigV1 {
   if (!isObject(raw.audio)) throw new Error("audioが不正です");
   if (
     !Array.isArray(raw.audio.announceMinutes) ||
-    !raw.audio.announceMinutes.every((x) => isInt(x) && x >= 0)
+    !raw.audio.announceMinutes.every(
+      (x) => isInt(x) && ANNOUNCE_ALLOWED_MINUTES.has(x),
+    )
   ) {
-    throw new Error("audio.announceMinutesが不正です");
+    throw new Error(
+      `audio.announceMinutesが不正です（使用可能: ${Array.from(ANNOUNCE_ALLOWED_MINUTES).join(",")}）`,
+    );
   }
   if (
     !Array.isArray(raw.audio.announceSeconds) ||
-    !raw.audio.announceSeconds.every((x) => isInt(x) && x >= 0)
+    !raw.audio.announceSeconds.every(
+      (x) => isInt(x) && ANNOUNCE_ALLOWED_SECONDS.has(x),
+    )
   ) {
-    throw new Error("audio.announceAtが不正です");
+    throw new Error(
+      `audio.announceSecondsが不正です（使用可能: ${Array.from(ANNOUNCE_ALLOWED_SECONDS).join(",")}）`,
+    );
   }
-  if (!isInt(raw.audio.countdownFrom) || raw.audio.countdownFrom < 0) {
-    throw new Error("audio.countdownFromが不正です");
+  if (
+    !isInt(raw.audio.countdownFrom) ||
+    raw.audio.countdownFrom < 0 ||
+    raw.audio.countdownFrom > ANNOUNCE_ALLOWED_COUNT_DOWN
+  ) {
+    throw new Error(
+      `audio.countdownFromが不正です（0〜${ANNOUNCE_ALLOWED_COUNT_DOWN}）`,
+    );
   }
 
   return {
