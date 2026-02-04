@@ -226,6 +226,11 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
         {state.active === null && (
           <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gray-500/70" />
         )}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none">
+          <div className="text-5xl font-mono font-semibold text-white/80 drop-shadow">
+            {state.ply}
+          </div>
+        </div>
         <button
           className={`flex-1 transition-colors ${
             state.active === leftPlayer

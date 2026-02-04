@@ -16,6 +16,7 @@ type ClockState = {
   running: boolean;
   lastTs: number | null;
   finished: boolean;
+  ply: number;
 };
 
 export type ClockTime = ClockConfigV1["time"];
@@ -111,6 +112,7 @@ export function useClock(time: ClockTime) {
     running: false,
     lastTs: null,
     finished: false,
+    ply: 0,
   }));
 
   // tick loop
@@ -174,6 +176,8 @@ export function useClock(time: ClockTime) {
       const nextActive = player === 0 ? 1 : 0;
 
       if (nextActive !== prev.active) {
+        // 手番が切り替わったら1手進める（対局開始の最初のタップは除外）
+        next.ply = prev.ply + 1;
         const incMs = player === 0 ? fischerIncMs0 : fischerIncMs1;
         // フィッシャー増分は「持ち時間」に加算する
         if (incMs > 0) next.players[player].mainRemainingMs += incMs;
@@ -233,6 +237,7 @@ export function useClock(time: ClockTime) {
         running: false,
         lastTs: null,
         finished: false,
+        ply: 0,
       }),
     );
   }
