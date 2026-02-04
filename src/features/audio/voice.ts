@@ -3,6 +3,24 @@ const cache = new Map<string, HTMLAudioElement>();
 export const SOUND = {
   yoroshiku: "audio/1/yoroshiku.wav",
   jikangiredesu: "audio/1/jikangiredesu.wav",
+  one: "audio/1/1.wav",
+  two: "audio/1/2.wav",
+  three: "audio/1/3.wav",
+  four: "audio/1/4.wav",
+  five: "audio/1/5.wav",
+  six: "audio/1/6.wav",
+  seven: "audio/1/7.wav",
+  eight: "audio/1/8.wav",
+  nine: "audio/1/9.wav",
+  ten: "audio/1/10.wav",
+  twenty: "audio/1/20.wav",
+  thirty: "audio/1/30.wav",
+  forty: "audio/1/40.wav",
+  fifty: "audio/1/50.wav",
+  byou: "audio/1/byou.wav",
+  fun: "audio/1/fun.wav",
+  nokori: "audio/1/nokori.wav",
+  thuudanshimasu: "audio/1/thuudanshimasu.wav",
 } as const;
 
 export type Sound = (typeof SOUND)[keyof typeof SOUND];
