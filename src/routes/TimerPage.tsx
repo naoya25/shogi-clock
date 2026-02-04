@@ -1,8 +1,14 @@
 import { useClock } from "../features/clock/useClock";
+import { parseConfigFromJson } from "../features/rules/load";
 import { formatMs } from "../lib/formatter";
+import sampleText from "../features/rules/builtins/sample.json?raw";
 
 export default function TimerPage() {
-  const { state, tap, pause, resume } = useClock([600, 300]);
+  const config = parseConfigFromJson(sampleText);
+  const { state, tap, pause, resume } = useClock([
+    config.time.player1.mainSeconds,
+    config.time.player2.mainSeconds,
+  ]);
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col">

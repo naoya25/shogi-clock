@@ -8,7 +8,7 @@
       "fischerSeconds": 5
     },
     "player2": {
-      "mainSeconds": 300,
+      "mainSeconds": 500,
       "byoyomiSeconds": 0,
       "fischerSeconds": 0
     }
