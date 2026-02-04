@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "name": "10分秒読み30秒フィッシャー5秒",
+  "time": {
+    "player1": {
+      "mainSeconds": 600,
+      "byoyomiSeconds": 30,
+      "fischerSeconds": 5
+    },
+    "player2": {
+      "mainSeconds": 300,
+      "byoyomiSeconds": 0,
+      "fischerSeconds": 0
+    }
+  },
+  "audio": {
+    "announceAt": [300, 60, 10],
+    "countdownFrom": 9
+  }
+}
