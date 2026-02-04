@@ -162,7 +162,16 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
               label="一時停止"
               icon={<FiPause />}
               className="bg-indigo-600 hover:bg-indigo-500"
-              onClick={pause}
+              onClick={() => {
+                if (isAudioEnabled) {
+                  try {
+                    void playPublicAudio(SOUND.thuudanshimasu);
+                  } catch {
+                    // no-op
+                  }
+                }
+                pause();
+              }}
             />
           ) : (
             <IconButton
