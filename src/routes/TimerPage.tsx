@@ -116,6 +116,9 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
             <div className="text-6xl font-mono">
               {formatMs(state.players[0].remainingMs)}
             </div>
+            {state.players[0].inByoyomi && (
+              <div className="mt-2 text-sm opacity-80">秒読み</div>
+            )}
           </div>
         </button>
 
@@ -133,6 +136,9 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
             <div className="text-6xl font-mono">
               {formatMs(state.players[1].remainingMs)}
             </div>
+            {state.players[1].inByoyomi && (
+              <div className="mt-2 text-sm opacity-80">秒読み</div>
+            )}
           </div>
         </button>
       </div>
