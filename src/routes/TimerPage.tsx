@@ -7,11 +7,16 @@ export default function TimerPage() {
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col">
       {/* プレイヤー（横並び） */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex relative">
+        {state.active === null && (
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gray-500/70" />
+        )}
         <button
           className={`flex-1 transition-colors ${
             state.active === 0
-              ? "bg-emerald-500 text-gray-950"
+              ? state.running
+                ? "bg-emerald-500 text-gray-950"
+                : "bg-emerald-700 text-emerald-50"
               : "bg-gray-700 text-white"
           }`}
           onClick={() => tap(0)}
@@ -26,7 +31,9 @@ export default function TimerPage() {
         <button
           className={`flex-1 transition-colors ${
             state.active === 1
-              ? "bg-emerald-500 text-gray-950"
+              ? state.running
+                ? "bg-emerald-500 text-gray-950"
+                : "bg-emerald-700 text-emerald-50"
               : "bg-gray-700 text-white"
           }`}
           onClick={() => tap(1)}
