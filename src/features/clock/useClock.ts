@@ -141,6 +141,8 @@ export function useClock(time: ClockTime) {
   function tap(player: 0 | 1) {
     setState((prev) => {
       if (prev.finished) return prev;
+      // 一時停止中はタップで手番変更/加算しない（ゲーム未開始は除く）
+      if (prev.active !== null && !prev.running) return prev;
 
       const now = Date.now();
       const next = structuredClone(prev);

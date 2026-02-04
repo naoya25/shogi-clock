@@ -73,6 +73,7 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
 
   const tapWithBeep = (player: 0 | 1) => {
     if (state.finished) return;
+    if (state.active !== null && !state.running) return;
 
     const nextActive = player === 0 ? 1 : 0;
     const willSwitch = state.active !== nextActive;
