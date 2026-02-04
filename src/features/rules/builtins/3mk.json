@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "name": "サンプル",
+  "name": "3分切負け",
   "time": {
     "player1": {
-      "mainSeconds": 0,
-      "byoyomiSeconds": 15,
+      "mainSeconds": 180,
+      "byoyomiSeconds": 0,
       "fischerSeconds": 0
     },
     "player2": {
-      "mainSeconds": 600,
+      "mainSeconds": 180,
       "byoyomiSeconds": 0,
       "fischerSeconds": 0
     }
   },
   "audio": {
-    "announceMinutes": [5, 1],
+    "announceMinutes": [1],
     "announceSeconds": [30],
     "countdownFrom": 10
   }

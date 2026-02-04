@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "name": "1分切れ負け",
+  "name": "10分切負け",
   "time": {
     "player1": {
-      "mainSeconds": 60,
+      "mainSeconds": 600,
       "byoyomiSeconds": 0,
       "fischerSeconds": 0
     },
     "player2": {
-      "mainSeconds": 60,
+      "mainSeconds": 600,
       "byoyomiSeconds": 0,
       "fischerSeconds": 0
     }
   },
   "audio": {
-    "announceMinutes": [],
+    "announceMinutes": [5, 1],
     "announceSeconds": [30],
     "countdownFrom": 10
   }

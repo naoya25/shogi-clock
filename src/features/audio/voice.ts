@@ -115,6 +115,10 @@ export function remainingMinutesPublicPath(min: number) {
 }
 
 export function remainingSecondsPublicPath(sec: number) {
-  // e.g. public/audio/1/nokori10s.wav
+  // 10秒以下はカウントダウン用を再生
+  // e.g. public/audio/1/countdown3.wav, それ以外は public/audio/1/nokori10s.wav
+  if (sec >= 1 && sec <= 10) {
+    return `audio/1/countdown${sec}.wav`;
+  }
   return `audio/1/nokori${sec}s.wav`;
 }

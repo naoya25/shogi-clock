@@ -5,7 +5,9 @@ const ANNOUNCE_ALLOWED_MINUTES = new Set([
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60,
 ]);
 
-const ANNOUNCE_ALLOWED_SECONDS = new Set([10, 20, 30, 40, 50]);
+const ANNOUNCE_ALLOWED_SECONDS = new Set([
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50,
+]);
 
 const ANNOUNCE_ALLOWED_COUNT_DOWN = 10;
 

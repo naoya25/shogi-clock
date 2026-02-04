@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "5分+5秒フィッシャー",
+  "time": {
+    "player1": {
+      "mainSeconds": 300,
+      "byoyomiSeconds": 0,
+      "fischerSeconds": 5
+    },
+    "player2": {
+      "mainSeconds": 300,
+      "byoyomiSeconds": 0,
+      "fischerSeconds": 5
+    }
+  },
+  "audio": {
+    "announceMinutes": [],
+    "announceSeconds": [5, 4, 3, 2, 1],
+    "countdownFrom": 0
+  }
+}

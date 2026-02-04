@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "name": "サンプル",
+  "name": "10分+秒読み30秒",
   "time": {
     "player1": {
-      "mainSeconds": 0,
-      "byoyomiSeconds": 15,
+      "mainSeconds": 600,
+      "byoyomiSeconds": 30,
       "fischerSeconds": 0
     },
     "player2": {
       "mainSeconds": 600,
-      "byoyomiSeconds": 0,
+      "byoyomiSeconds": 30,
       "fischerSeconds": 0
     }
   },
