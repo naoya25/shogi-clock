@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { appPath } from "../routes";
 import { IconButton, IconLinkButton } from "../components/IconButtons";
-import { FiPause, FiPlay, FiRotateCcw, FiSettings } from "react-icons/fi";
+import { FiPause, FiPlay, FiRepeat, FiRotateCcw, FiSettings } from "react-icons/fi";
 
 export default function TimerPage() {
   const [searchParams] = useSearchParams();
@@ -63,12 +63,16 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
   const { state, tap, pause, resume, reset } = useClock(config.time);
 
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
+  const [isSidesSwapped, setIsSidesSwapped] = useState<boolean>(false);
   const hasAnnouncedTimeoutRef = useRef(false);
   const prevRemainingSecRef = useRef<[number | null, number | null]>([
     null,
     null,
   ]);
   const announceQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  const leftPlayer: 0 | 1 = isSidesSwapped ? 1 : 0;
+  const rightPlayer: 0 | 1 = isSidesSwapped ? 0 : 1;
 
   useEffect(() => {
     if (!state.finished) return;
@@ -224,19 +228,20 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
         )}
         <button
           className={`flex-1 transition-colors ${
-            state.active === 0
+            state.active === leftPlayer
               ? state.running
                 ? "bg-emerald-500 text-gray-950"
                 : "bg-emerald-700 text-emerald-50"
               : "bg-gray-700 text-white"
           }`}
-          onClick={() => tapWithBeep(0)}
+          onClick={() => tapWithBeep(leftPlayer)}
         >
           <div className="h-full flex flex-col items-center justify-center">
             <div className="text-6xl font-mono">
-              {formatMs(state.players[0].remainingMs)}
+              {formatMs(state.players[leftPlayer].remainingMs)}
             </div>
-            {state.players[0].inByoyomi && (
+            <div className="mt-2 text-sm opacity-80">プレイヤー{leftPlayer + 1}</div>
+            {state.players[leftPlayer].inByoyomi && (
               <div className="mt-2 text-sm opacity-80">秒読み</div>
             )}
           </div>
@@ -244,19 +249,22 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
 
         <button
           className={`flex-1 transition-colors ${
-            state.active === 1
+            state.active === rightPlayer
               ? state.running
                 ? "bg-emerald-500 text-gray-950"
                 : "bg-emerald-700 text-emerald-50"
               : "bg-gray-700 text-white"
           }`}
-          onClick={() => tapWithBeep(1)}
+          onClick={() => tapWithBeep(rightPlayer)}
         >
           <div className="h-full flex flex-col items-center justify-center">
             <div className="text-6xl font-mono">
-              {formatMs(state.players[1].remainingMs)}
+              {formatMs(state.players[rightPlayer].remainingMs)}
             </div>
-            {state.players[1].inByoyomi && (
+            <div className="mt-2 text-sm opacity-80">
+              プレイヤー{rightPlayer + 1}
+            </div>
+            {state.players[rightPlayer].inByoyomi && (
               <div className="mt-2 text-sm opacity-80">秒読み</div>
             )}
           </div>
@@ -266,9 +274,9 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
       {/* 操作 */}
       <div className="p-3 space-y-2">
         <div className="text-center text-xs opacity-70">
-          先手 持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
+          プレイヤー1 持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
           {config.time.player1.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
-          {config.time.player1.fischerSeconds ?? 0}s ｜ 後手 持ち時間:{" "}
+          {config.time.player1.fischerSeconds ?? 0}s ｜ プレイヤー2 持ち時間:{" "}
           {config.time.player2.mainSeconds}s / 秒読み:{" "}
           {config.time.player2.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
           {config.time.player2.fischerSeconds ?? 0}s
@@ -299,6 +307,11 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
               disabled={state.active === null || state.finished}
             />
           )}
+          <IconButton
+            label="左右入替"
+            icon={<FiRepeat />}
+            onClick={() => setIsSidesSwapped((v) => !v)}
+          />
           <button
             onClick={async () => {
               if (isAudioEnabled) {

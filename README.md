@@ -28,5 +28,7 @@ npm run preview
 
 
 ## TODO
-- 秒読み実装
-- 音声実装
+- 手数表示
+- ルール追加機能
+- PWA化
+- GitHub Pagesでリリース
