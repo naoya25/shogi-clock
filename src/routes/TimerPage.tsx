@@ -1,6 +1,7 @@
 import { useClock } from "../features/clock/useClock";
 import { parseConfigFromJson } from "../features/rules/load";
 import { beep, disableBeep, enableBeep } from "../features/audio/beep";
+import { playPublicAudio, SOUND } from "../features/audio/voice";
 import { formatMs } from "../lib/formatter";
 import sampleText from "../features/rules/builtins/sample.json?raw";
 import { useState } from "react";
@@ -12,13 +13,21 @@ export default function TimerPage() {
     config.time.player2.mainSeconds,
   ]);
 
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
 
   const tapWithBeep = (player: 0 | 1) => {
     if (state.finished) return;
 
     const nextActive = player === 0 ? 1 : 0;
     const willSwitch = state.active !== nextActive;
+
+    if (isAudioEnabled && state.active === null) {
+      try {
+        void playPublicAudio(SOUND.yoroshiku);
+      } catch {
+        // no-op
+      }
+    }
 
     if (isAudioEnabled && willSwitch) {
       try {
