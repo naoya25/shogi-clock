@@ -48,8 +48,14 @@ export function validateConfigV1(raw: unknown): ClockConfigV1 {
   // audio
   if (!isObject(raw.audio)) throw new Error("audioが不正です");
   if (
-    !Array.isArray(raw.audio.announceAt) ||
-    !raw.audio.announceAt.every((x) => isInt(x) && x >= 0)
+    !Array.isArray(raw.audio.announceMinutes) ||
+    !raw.audio.announceMinutes.every((x) => isInt(x) && x >= 0)
+  ) {
+    throw new Error("audio.announceMinutesが不正です");
+  }
+  if (
+    !Array.isArray(raw.audio.announceSeconds) ||
+    !raw.audio.announceSeconds.every((x) => isInt(x) && x >= 0)
   ) {
     throw new Error("audio.announceAtが不正です");
   }
@@ -73,7 +79,8 @@ export function validateConfigV1(raw: unknown): ClockConfigV1 {
       },
     },
     audio: {
-      announceAt: raw.audio.announceAt,
+      announceMinutes: raw.audio.announceMinutes,
+      announceSeconds: raw.audio.announceSeconds,
       countdownFrom: raw.audio.countdownFrom,
     },
   };

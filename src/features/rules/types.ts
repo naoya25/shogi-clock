@@ -14,7 +14,8 @@ export type ClockConfigV1 = {
     };
   };
   audio: {
-    announceAt: number[];
+    announceMinutes: number[];
+    announceSeconds: number[];
     countdownFrom: number;
   };
 };

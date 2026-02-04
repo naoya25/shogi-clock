@@ -14,7 +14,8 @@
     }
   },
   "audio": {
-    "announceAt": [300, 60, 10],
-    "countdownFrom": 9
+    "announceMinutes": [5, 1],
+    "announceSeconds": [30],
+    "countdownFrom": 10
   }
 }
