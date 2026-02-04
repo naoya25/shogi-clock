@@ -3,7 +3,7 @@ import { getAllConfigs, type BuiltinConfig } from "../features/rules/load";
 import { beep, disableBeep, enableBeep } from "../features/audio/beep";
 import { playPublicAudio, SOUND } from "../features/audio/voice";
 import { formatMs } from "../lib/formatter";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { appPath } from "../routes";
 
@@ -46,17 +46,28 @@ export default function TimerPage() {
     );
   }
 
-  return <TimerPageInner builtin={selected} />;
+  return <TimerPageInner key={selected.id} builtin={selected} />;
 }
 
 function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
   const config = builtin.config;
-  const { state, tap, pause, resume } = useClock([
-    config.time.player1.mainSeconds,
-    config.time.player2.mainSeconds,
-  ]);
+  const { state, tap, pause, resume } = useClock(config.time);
 
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
+  const hasAnnouncedTimeoutRef = useRef(false);
+
+  useEffect(() => {
+    if (!state.finished) return;
+    if (hasAnnouncedTimeoutRef.current) return;
+    hasAnnouncedTimeoutRef.current = true;
+
+    if (!isAudioEnabled) return;
+    try {
+      void playPublicAudio(SOUND.jikangiredesu);
+    } catch {
+      // no-op
+    }
+  }, [state.finished, isAudioEnabled]);
 
   const tapWithBeep = (player: 0 | 1) => {
     if (state.finished) return;
@@ -128,6 +139,14 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
 
       {/* 操作 */}
       <div className="p-3 grid grid-cols-2 gap-2">
+        <div className="col-span-2 text-center text-xs opacity-70">
+          先手 持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
+          {config.time.player1.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
+          {config.time.player1.fischerSeconds ?? 0}s ｜ 後手 持ち時間:{" "}
+          {config.time.player2.mainSeconds}s / 秒読み:{" "}
+          {config.time.player2.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
+          {config.time.player2.fischerSeconds ?? 0}s
+        </div>
         <button
           className="rounded bg-indigo-600 py-2"
           onClick={state.running ? pause : resume}

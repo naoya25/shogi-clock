@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ClockConfigV1 } from "../rules/types";
 
 const TICK_MS = 100;
 
@@ -14,7 +15,22 @@ type ClockState = {
   finished: boolean;
 };
 
-export function useClock(initialSeconds: [number, number]) {
+export type ClockTime = ClockConfigV1["time"];
+
+export function useClock(time: ClockTime) {
+  const initialSeconds: [number, number] = [
+    time.player1.mainSeconds,
+    time.player2.mainSeconds,
+  ];
+  // const byoyomiSeconds: [number, number] = [
+  //   time.player1.byoyomiSeconds ?? 0,
+  //   time.player2.byoyomiSeconds ?? 0,
+  // ];
+  const fischerSeconds: [number, number] = [
+    time.player1.fischerSeconds ?? 0,
+    time.player2.fischerSeconds ?? 0,
+  ];
+
   const [state, setState] = useState<ClockState>(() => ({
     players: [
       { remainingMs: initialSeconds[0] * 1000 },
@@ -66,8 +82,23 @@ export function useClock(initialSeconds: [number, number]) {
       const now = Date.now();
       const next = structuredClone(prev);
 
+      // タップ瞬間までの経過分を反映（最後のtickとtapの間のズレを減らす）
+      if (prev.running && prev.active !== null && prev.lastTs !== null) {
+        const delta = now - prev.lastTs;
+        const p = next.players[prev.active];
+        p.remainingMs -= delta;
+        if (p.remainingMs <= 0) {
+          p.remainingMs = 0;
+          next.running = false;
+          next.finished = true;
+          next.lastTs = null;
+          return next;
+        }
+      }
+
       // まだ開始していない
       if (prev.active === null) {
+        // ゲーム開始の最初のタップではフィッシャー増分は加算しない
         next.active = player === 0 ? 1 : 0;
         next.running = true;
         next.lastTs = now;
@@ -78,6 +109,8 @@ export function useClock(initialSeconds: [number, number]) {
       const nextActive = player === 0 ? 1 : 0;
 
       if (nextActive !== prev.active) {
+        const incMs = (fischerSeconds[player] ?? 0) * 1000;
+        if (incMs > 0) next.players[player].remainingMs += incMs;
         next.active = nextActive;
         next.lastTs = now;
       }

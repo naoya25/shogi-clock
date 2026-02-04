@@ -4,13 +4,13 @@
   "time": {
     "player1": {
       "mainSeconds": 10,
-      "byoyomiSeconds": 0,
-      "fischerSeconds": 0
+      "byoyomiSeconds": 10,
+      "fischerSeconds": 5
     },
     "player2": {
-      "mainSeconds": 60,
-      "byoyomiSeconds": 0,
-      "fischerSeconds": 0
+      "mainSeconds": 10,
+      "byoyomiSeconds": 10,
+      "fischerSeconds": 5
     }
   },
   "audio": {
