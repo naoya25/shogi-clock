@@ -3,6 +3,7 @@ const cache = new Map<string, HTMLAudioElement>();
 export const SOUND = {
   yoroshiku: "audio/1/yoroshiku.wav",
   jikangiredesu: "audio/1/jikangiredesu.wav",
+  thuudanshimasu: "audio/1/thuudanshimasu.wav",
   one: "audio/1/1.wav",
   two: "audio/1/2.wav",
   three: "audio/1/3.wav",
@@ -13,15 +14,20 @@ export const SOUND = {
   eight: "audio/1/8.wav",
   nine: "audio/1/9.wav",
   ten: "audio/1/10.wav",
-  twenty: "audio/1/20.wav",
-  thirty: "audio/1/30.wav",
-  forty: "audio/1/40.wav",
-  fifty: "audio/1/50.wav",
-  byou: "audio/1/byou.wav",
-  fun: "audio/1/fun.wav",
-  nokori: "audio/1/nokori.wav",
-  thuudanshimasu: "audio/1/thuudanshimasu.wav",
 } as const;
+
+export const COUNTDOWN_SOUND: Record<number, string> = {
+  1: SOUND.one,
+  2: SOUND.two,
+  3: SOUND.three,
+  4: SOUND.four,
+  5: SOUND.five,
+  6: SOUND.six,
+  7: SOUND.seven,
+  8: SOUND.eight,
+  9: SOUND.nine,
+  10: SOUND.ten,
+};
 
 export type Sound = (typeof SOUND)[keyof typeof SOUND];
 
@@ -67,4 +73,48 @@ export function playPublicAudio(
   }
 
   return audio.play();
+}
+
+export async function playPublicAudioUntilEnd(
+  publicPath: string,
+  options: PlayPublicAudioOptions = {},
+) {
+  const audio = getAudio(publicPath);
+
+  if (typeof options.volume === "number") {
+    audio.volume = Math.min(1, Math.max(0, options.volume));
+  }
+
+  if (options.restart ?? true) {
+    try {
+      audio.currentTime = 0;
+    } catch {
+      // no-op
+    }
+  }
+
+  const ended = new Promise<void>((resolve) => {
+    const onDone = () => resolve();
+    audio.addEventListener("ended", onDone, { once: true });
+    audio.addEventListener("error", onDone, { once: true });
+  });
+
+  try {
+    await audio.play();
+  } catch {
+    return;
+  }
+
+  await ended;
+}
+
+// announce assets
+export function remainingMinutesPublicPath(min: number) {
+  // e.g. public/audio/1/nokori6m.wav
+  return `audio/1/nokori${min}m.wav`;
+}
+
+export function remainingSecondsPublicPath(sec: number) {
+  // e.g. public/audio/1/nokori10s.wav
+  return `audio/1/nokori${sec}s.wav`;
 }

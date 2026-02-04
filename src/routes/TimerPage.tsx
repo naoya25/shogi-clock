@@ -1,7 +1,14 @@
 import { useClock } from "../features/clock/useClock";
 import { getAllConfigs, type BuiltinConfig } from "../features/rules/load";
 import { beep, disableBeep, enableBeep } from "../features/audio/beep";
-import { playPublicAudio, SOUND } from "../features/audio/voice";
+import {
+  COUNTDOWN_SOUND,
+  playPublicAudio,
+  playPublicAudioUntilEnd,
+  remainingMinutesPublicPath,
+  remainingSecondsPublicPath,
+  SOUND,
+} from "../features/audio/voice";
 import { formatMs } from "../lib/formatter";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -57,6 +64,11 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
 
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
   const hasAnnouncedTimeoutRef = useRef(false);
+  const prevRemainingSecRef = useRef<[number | null, number | null]>([
+    null,
+    null,
+  ]);
+  const announceQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     if (!state.finished) return;
@@ -70,6 +82,111 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
       // no-op
     }
   }, [state.finished, isAudioEnabled]);
+
+  useEffect(() => {
+    if (state.finished) return;
+    if (!state.running || state.active === null) return;
+    if (!isAudioEnabled) return;
+
+    const active = state.active;
+    const remainingMs = state.players[active].remainingMs;
+
+    const currentSec = Math.max(0, Math.floor(remainingMs / 1000));
+    const prevSec = prevRemainingSecRef.current[active];
+
+    // initialize / time increased (byoyomi reset, fischer, etc.)
+    if (prevSec === null || currentSec > prevSec) {
+      prevRemainingSecRef.current[active] = currentSec;
+      // 秒読み開始/リセット直後に countdownFrom 以下なら、その秒から読み上げ開始
+      if (state.players[active].inByoyomi) {
+        const countdownFrom = config.audio.countdownFrom ?? 0;
+        if (countdownFrom > 0 && currentSec <= countdownFrom) {
+          const sound = COUNTDOWN_SOUND[currentSec];
+          if (sound) {
+            announceQueueRef.current = announceQueueRef.current
+              .then(() => playPublicAudioUntilEnd(sound))
+              .catch(() => {
+                // no-op
+              });
+          }
+        }
+      }
+      return;
+    }
+
+    // update for next tick early
+    prevRemainingSecRef.current[active] = currentSec;
+
+    if (prevSec === currentSec) return;
+
+    // 秒読み中は、countdownFrom 以下でカウントダウン（持ち時間中はしない）
+    if (state.players[active].inByoyomi) {
+      const countdownFrom = config.audio.countdownFrom ?? 0;
+      if (countdownFrom <= 0) return;
+      if (currentSec > countdownFrom) return;
+      if (prevSec <= currentSec) return;
+
+      const start = Math.min(prevSec - 1, countdownFrom);
+      const end = Math.max(currentSec, 1);
+
+      for (let n = start; n >= end; n--) {
+        const sound = COUNTDOWN_SOUND[n];
+        if (!sound) continue;
+        announceQueueRef.current = announceQueueRef.current
+          .then(() => playPublicAudioUntilEnd(sound))
+          .catch(() => {
+            // no-op
+          });
+      }
+      return;
+    }
+
+    const minutes = config.audio.announceMinutes ?? [];
+    const seconds = config.audio.announceSeconds ?? [];
+
+    const triggers: Array<
+      | { kind: "minutes"; n: number; targetSec: number }
+      | { kind: "seconds"; n: number; targetSec: number }
+    > = [];
+
+    for (const m of minutes) {
+      const targetSec = m * 60;
+      if (prevSec > targetSec && currentSec <= targetSec) {
+        triggers.push({ kind: "minutes", n: m, targetSec });
+      }
+    }
+    for (const s of seconds) {
+      const targetSec = s;
+      if (prevSec > targetSec && currentSec <= targetSec) {
+        triggers.push({ kind: "seconds", n: s, targetSec });
+      }
+    }
+
+    if (triggers.length === 0) return;
+    triggers.sort((a, b) => b.targetSec - a.targetSec);
+
+    for (const t of triggers) {
+      const publicPath =
+        t.kind === "minutes"
+          ? remainingMinutesPublicPath(t.n)
+          : remainingSecondsPublicPath(t.n);
+
+      announceQueueRef.current = announceQueueRef.current
+        .then(() => playPublicAudioUntilEnd(publicPath))
+        .catch(() => {
+          // no-op
+        });
+    }
+  }, [
+    state.running,
+    state.active,
+    state.finished,
+    state.players,
+    config.audio.countdownFrom,
+    config.audio.announceMinutes,
+    config.audio.announceSeconds,
+    isAudioEnabled,
+  ]);
 
   const tapWithBeep = (player: 0 | 1) => {
     if (state.finished) return;
@@ -205,6 +322,8 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
             icon={<FiRotateCcw />}
             onClick={() => {
               hasAnnouncedTimeoutRef.current = false;
+              prevRemainingSecRef.current = [null, null];
+              announceQueueRef.current = Promise.resolve();
               reset();
             }}
           />
