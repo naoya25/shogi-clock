@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "10秒切れ負け",
+  "time": {
+    "player1": {
+      "mainSeconds": 10,
+      "byoyomiSeconds": 0,
+      "fischerSeconds": 0
+    },
+    "player2": {
+      "mainSeconds": 60,
+      "byoyomiSeconds": 0,
+      "fischerSeconds": 0
+    }
+  },
+  "audio": {
+    "announceMinutes": [],
+    "announceSeconds": [30],
+    "countdownFrom": 10
+  }
+}
