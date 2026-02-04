@@ -6,31 +6,38 @@ export default function TimerPage() {
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col">
-      {/* 上（Player 1） */}
-      <button
-        className={`flex-1 ${state.active === 0 ? "bg-gray-800" : "bg-gray-700"}`}
-        onClick={() => tap(0)}
-      >
-        <div className="h-full flex flex-col items-center justify-center">
-          <div className="text-sm opacity-70">Player 1</div>
-          <div className="text-6xl font-mono">
-            {formatMs(state.players[0].remainingMs)}
+      {/* プレイヤー（横並び） */}
+      <div className="flex-1 flex">
+        <button
+          className={`flex-1 transition-colors ${
+            state.active === 0
+              ? "bg-emerald-500 text-gray-950"
+              : "bg-gray-700 text-white"
+          }`}
+          onClick={() => tap(0)}
+        >
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="text-6xl font-mono">
+              {formatMs(state.players[0].remainingMs)}
+            </div>
           </div>
-        </div>
-      </button>
+        </button>
 
-      {/* 下（Player 2） */}
-      <button
-        className={`flex-1 ${state.active === 1 ? "bg-gray-800" : "bg-gray-700"}`}
-        onClick={() => tap(1)}
-      >
-        <div className="h-full flex flex-col items-center justify-center">
-          <div className="text-sm opacity-70">Player 2</div>
-          <div className="text-6xl font-mono">
-            {formatMs(state.players[1].remainingMs)}
+        <button
+          className={`flex-1 transition-colors ${
+            state.active === 1
+              ? "bg-emerald-500 text-gray-950"
+              : "bg-gray-700 text-white"
+          }`}
+          onClick={() => tap(1)}
+        >
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="text-6xl font-mono">
+              {formatMs(state.players[1].remainingMs)}
+            </div>
           </div>
-        </div>
-      </button>
+        </button>
+      </div>
 
       {/* 操作 */}
       <div className="p-3 grid grid-cols-2 gap-2">
