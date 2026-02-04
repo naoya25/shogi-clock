@@ -1,5 +1,7 @@
 import { useClock } from "../features/clock/useClock";
 import { getAllConfigs, type BuiltinConfig } from "../features/rules/load";
+import type { ClockConfigV1 } from "../features/rules/types";
+import { validateConfigV1 } from "../features/rules/validate";
 import { beep, disableBeep, enableBeep } from "../features/audio/beep";
 import {
   COUNTDOWN_SOUND,
@@ -11,7 +13,7 @@ import {
 } from "../features/audio/voice";
 import { formatMs } from "../lib/formatter";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { appPath } from "../routes";
 import { IconButton, IconLinkButton } from "../components/IconButtons";
 import { FiPause, FiPlay, FiRepeat, FiRotateCcw, FiSettings } from "react-icons/fi";
@@ -19,20 +21,70 @@ import { FiPause, FiPlay, FiRepeat, FiRotateCcw, FiSettings } from "react-icons/
 export default function TimerPage() {
   const [searchParams] = useSearchParams();
   const ruleIdFromQuery = searchParams.get("rule");
+  const location = useLocation();
+
+  const customFromState = (
+    location.state as { customConfig?: unknown } | null
+  )?.customConfig;
 
   const { selected, errorMessage } = useMemo(() => {
+    if (customFromState !== undefined) {
+      try {
+        const config = validateConfigV1(customFromState);
+        return {
+          selected: {
+            kind: "custom" as const,
+            config,
+            key: `custom:${JSON.stringify(config)}`,
+          },
+          errorMessage: null as string | null,
+        };
+      } catch (e) {
+        return {
+          selected: null as
+            | {
+                kind: "builtin";
+                builtin: BuiltinConfig;
+                key: string;
+              }
+            | {
+                kind: "custom";
+                config: ClockConfigV1;
+                key: string;
+              }
+            | null,
+          errorMessage: e instanceof Error ? e.message : "ルールが不正です",
+        };
+      }
+    }
+
     const all = getAllConfigs();
     if (all.length === 0) {
       return {
-        selected: null as BuiltinConfig | null,
+        selected: null as
+          | {
+              kind: "builtin";
+              builtin: BuiltinConfig;
+              key: string;
+            }
+          | {
+              kind: "custom";
+              config: ClockConfigV1;
+              key: string;
+            }
+          | null,
         errorMessage: "ルール定義が見つかりません",
       };
     }
     const hit = ruleIdFromQuery
       ? all.find((c) => c.id === ruleIdFromQuery)
       : undefined;
-    return { selected: hit ?? all[0], errorMessage: null as string | null };
-  }, [ruleIdFromQuery]);
+    const builtin = hit ?? all[0];
+    return {
+      selected: { kind: "builtin" as const, builtin, key: builtin.id },
+      errorMessage: null as string | null,
+    };
+  }, [customFromState, ruleIdFromQuery]);
 
   if (!selected) {
     return (
@@ -55,11 +107,29 @@ export default function TimerPage() {
     );
   }
 
-  return <TimerPageInner key={selected.id} builtin={selected} />;
+  return (
+    <TimerPageInner
+      key={selected.key}
+      selection={selected.kind === "builtin" ? selected.builtin : selected.config}
+      settingsNav={
+        selected.kind === "builtin"
+          ? { kind: "builtin", ruleId: selected.builtin.id }
+          : { kind: "custom", config: selected.config }
+      }
+    />
+  );
 }
 
-function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
-  const config = builtin.config;
+function TimerPageInner({
+  selection,
+  settingsNav,
+}: {
+  selection: BuiltinConfig | ClockConfigV1;
+  settingsNav:
+    | { kind: "builtin"; ruleId: string }
+    | { kind: "custom"; config: ClockConfigV1 };
+}) {
+  const config = "version" in selection ? selection : selection.config;
   const { state, tap, pause, resume, reset } = useClock(config.time);
 
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
@@ -348,7 +418,16 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
           <IconLinkButton
             label="設定"
             icon={<FiSettings />}
-            to={appPath.settings({ rule: builtin.id })}
+            to={
+              settingsNav.kind === "builtin"
+                ? appPath.settings({ rule: settingsNav.ruleId })
+                : appPath.settings()
+            }
+            state={
+              settingsNav.kind === "custom"
+                ? { customConfig: settingsNav.config }
+                : undefined
+            }
           />
         </div>
       </div>

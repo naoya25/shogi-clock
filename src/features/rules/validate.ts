@@ -1,15 +1,17 @@
 import { isInt, isObject, isString } from "../../lib/validate";
 import type { ClockConfigV1 } from "./types";
 
-const ANNOUNCE_ALLOWED_MINUTES = new Set([
+export const ANNOUNCE_ALLOWED_MINUTES_LIST = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60,
-]);
+] as const;
+const ANNOUNCE_ALLOWED_MINUTES = new Set<number>(ANNOUNCE_ALLOWED_MINUTES_LIST);
 
-const ANNOUNCE_ALLOWED_SECONDS = new Set([
+export const ANNOUNCE_ALLOWED_SECONDS_LIST = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50,
-]);
+] as const;
+const ANNOUNCE_ALLOWED_SECONDS = new Set<number>(ANNOUNCE_ALLOWED_SECONDS_LIST);
 
-const ANNOUNCE_ALLOWED_COUNT_DOWN = 10;
+export const ANNOUNCE_ALLOWED_COUNTDOWN_MAX = 10;
 
 export function validateConfigV1(raw: unknown): ClockConfigV1 {
   if (!isObject(raw))
@@ -80,10 +82,10 @@ export function validateConfigV1(raw: unknown): ClockConfigV1 {
   if (
     !isInt(raw.audio.countdownFrom) ||
     raw.audio.countdownFrom < 0 ||
-    raw.audio.countdownFrom > ANNOUNCE_ALLOWED_COUNT_DOWN
+    raw.audio.countdownFrom > ANNOUNCE_ALLOWED_COUNTDOWN_MAX
   ) {
     throw new Error(
-      `audio.countdownFromが不正です（0〜${ANNOUNCE_ALLOWED_COUNT_DOWN}）`,
+      `audio.countdownFromが不正です（0〜${ANNOUNCE_ALLOWED_COUNTDOWN_MAX}）`,
     );
   }
 
