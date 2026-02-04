@@ -6,6 +6,8 @@ import { formatMs } from "../lib/formatter";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { appPath } from "../routes";
+import { IconButton, IconLinkButton } from "../components/IconButtons";
+import { FiPause, FiPlay, FiRotateCcw, FiSettings } from "react-icons/fi";
 
 export default function TimerPage() {
   const [searchParams] = useSearchParams();
@@ -51,7 +53,7 @@ export default function TimerPage() {
 
 function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
   const config = builtin.config;
-  const { state, tap, pause, resume } = useClock(config.time);
+  const { state, tap, pause, resume, reset } = useClock(config.time);
 
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
   const hasAnnouncedTimeoutRef = useRef(false);
@@ -144,8 +146,8 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
       </div>
 
       {/* 操作 */}
-      <div className="p-3 grid grid-cols-2 gap-2">
-        <div className="col-span-2 text-center text-xs opacity-70">
+      <div className="p-3 space-y-2">
+        <div className="text-center text-xs opacity-70">
           先手 持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
           {config.time.player1.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
           {config.time.player1.fischerSeconds ?? 0}s ｜ 後手 持ち時間:{" "}
@@ -153,36 +155,55 @@ function TimerPageInner({ builtin }: { builtin: BuiltinConfig }) {
           {config.time.player2.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
           {config.time.player2.fischerSeconds ?? 0}s
         </div>
-        <button
-          className="rounded bg-indigo-600 py-2"
-          onClick={state.running ? pause : resume}
-        >
-          {state.running ? "一時停止" : "再開"}
-        </button>
-        <button
-          onClick={async () => {
-            if (isAudioEnabled) {
-              setIsAudioEnabled(false);
-              await disableBeep();
-              return;
-            }
-            setIsAudioEnabled(true);
-            enableBeep();
-          }}
-          className={`rounded-md px-3 py-2 text-sm transition-colors ${
-            isAudioEnabled
-              ? "bg-emerald-700 hover:bg-emerald-600"
-              : "bg-gray-800 hover:bg-gray-700"
-          }`}
-        >
-          {isAudioEnabled ? "音声: ON" : "音声: OFF"}
-        </button>
-        <Link
-          to={appPath.settings({ rule: builtin.id })}
-          className="col-span-2 rounded-md bg-gray-800 px-3 py-2 text-center text-sm hover:bg-gray-700"
-        >
-          設定
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {state.running ? (
+            <IconButton
+              label="一時停止"
+              icon={<FiPause />}
+              className="bg-indigo-600 hover:bg-indigo-500"
+              onClick={pause}
+            />
+          ) : (
+            <IconButton
+              label="再開"
+              icon={<FiPlay />}
+              className="bg-indigo-600 hover:bg-indigo-500"
+              onClick={resume}
+              disabled={state.active === null || state.finished}
+            />
+          )}
+          <button
+            onClick={async () => {
+              if (isAudioEnabled) {
+                setIsAudioEnabled(false);
+                await disableBeep();
+                return;
+              }
+              setIsAudioEnabled(true);
+              enableBeep();
+            }}
+            className={`h-9 rounded-md px-2 text-xs transition-colors ${
+              isAudioEnabled
+                ? "bg-emerald-700 hover:bg-emerald-600"
+                : "bg-gray-800 hover:bg-gray-700"
+            }`}
+          >
+            {isAudioEnabled ? "音声: ON" : "音声: OFF"}
+          </button>
+          <IconButton
+            label="リセット"
+            icon={<FiRotateCcw />}
+            onClick={() => {
+              hasAnnouncedTimeoutRef.current = false;
+              reset();
+            }}
+          />
+          <IconLinkButton
+            label="設定"
+            icon={<FiSettings />}
+            to={appPath.settings({ rule: builtin.id })}
+          />
+        </div>
       </div>
     </div>
   );

@@ -211,5 +211,30 @@ export function useClock(time: ClockTime) {
     });
   }
 
-  return { state, tap, pause, resume };
+  function reset() {
+    setState(() =>
+      syncDerived({
+        players: [
+          {
+            mainRemainingMs: time.player1.mainSeconds * 1000,
+            byoyomiRemainingMs: byoyomiMs0,
+            remainingMs: time.player1.mainSeconds * 1000,
+            inByoyomi: false,
+          },
+          {
+            mainRemainingMs: time.player2.mainSeconds * 1000,
+            byoyomiRemainingMs: byoyomiMs1,
+            remainingMs: time.player2.mainSeconds * 1000,
+            inByoyomi: false,
+          },
+        ],
+        active: null,
+        running: false,
+        lastTs: null,
+        finished: false,
+      }),
+    );
+  }
+
+  return { state, tap, pause, resume, reset };
 }
