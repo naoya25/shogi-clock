@@ -1,9 +1,15 @@
-function App() {
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import TimerPage from "./routes/TimerPage";
+import SettingsPage from "./routes/SettingsPage";
+
+export default function App() {
   return (
-    <>
-      <div className="text-red-500">Hello World!</div>
-    </>
+    <HashRouter>
+      <Routes>
+        <Route path="/timer" element={<TimerPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/timer" replace />} />
+      </Routes>
+    </HashRouter>
   );
 }
-
-export default App;
