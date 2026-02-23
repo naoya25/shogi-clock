@@ -22,13 +22,7 @@ npm run build
 npm run preview
 ```
 
-## 音声
-
-音声ファイルは `public/audio/` にあります。
-
-
 ## TODO
-- PC版は任意のキーボードで手番交代可能にする
 - GitHub Pagesでリリース
 - PWA化
 - ios動作確認
