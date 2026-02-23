@@ -1,7 +1,13 @@
-import { useClock } from "../features/clock/useClock";
-import { getAllConfigs, type BuiltinConfig } from "../features/rules/load";
-import type { ClockConfigV1 } from "../features/rules/types";
-import { validateConfigV1 } from "../features/rules/validate";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  FiPause,
+  FiPlay,
+  FiRepeat,
+  FiRotateCcw,
+  FiSettings,
+} from "react-icons/fi";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { IconButton, IconLinkButton } from "../components/IconButtons";
 import { beep, disableBeep, enableBeep } from "../features/audio/beep";
 import {
   COUNTDOWN_SOUND,
@@ -11,21 +17,24 @@ import {
   remainingSecondsPublicPath,
   SOUND,
 } from "../features/audio/voice";
+import { useClock } from "../features/clock/useClock";
+import { getAllConfigs, type BuiltinConfig } from "../features/rules/load";
+import type { ClockConfigV1 } from "../features/rules/types";
+import { validateConfigV1 } from "../features/rules/validate";
 import { formatMs } from "../lib/formatter";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { appPath } from "../routes";
-import { IconButton, IconLinkButton } from "../components/IconButtons";
-import { FiPause, FiPlay, FiRepeat, FiRotateCcw, FiSettings } from "react-icons/fi";
+
+const TURN_SWITCH_KEYS = ["Enter", " ", "Spacebar"] as const;
+const TURN_SWITCH_KEY_SET = new Set<string>(TURN_SWITCH_KEYS);
+const isTurnSwitchKey = (e: KeyboardEvent) => TURN_SWITCH_KEY_SET.has(e.key);
 
 export default function TimerPage() {
   const [searchParams] = useSearchParams();
   const ruleIdFromQuery = searchParams.get("rule");
   const location = useLocation();
 
-  const customFromState = (
-    location.state as { customConfig?: unknown } | null
-  )?.customConfig;
+  const customFromState = (location.state as { customConfig?: unknown } | null)
+    ?.customConfig;
 
   const { selected, errorMessage } = useMemo(() => {
     if (customFromState !== undefined) {
@@ -110,7 +119,9 @@ export default function TimerPage() {
   return (
     <TimerPageInner
       key={selected.key}
-      selection={selected.kind === "builtin" ? selected.builtin : selected.config}
+      selection={
+        selected.kind === "builtin" ? selected.builtin : selected.config
+      }
       settingsNav={
         selected.kind === "builtin"
           ? { kind: "builtin", ruleId: selected.builtin.id }
@@ -135,6 +146,9 @@ function TimerPageInner({
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(true);
   const [isSidesSwapped, setIsSidesSwapped] = useState<boolean>(false);
   const hasAnnouncedTimeoutRef = useRef(false);
+  const stateRef = useRef(state);
+  const tapRef = useRef(tap);
+  const isAudioEnabledRef = useRef(isAudioEnabled);
   const prevRemainingSecRef = useRef<[number | null, number | null]>([
     null,
     null,
@@ -143,6 +157,18 @@ function TimerPageInner({
 
   const leftPlayer: 0 | 1 = isSidesSwapped ? 1 : 0;
   const rightPlayer: 0 | 1 = isSidesSwapped ? 0 : 1;
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    tapRef.current = tap;
+  }, [tap]);
+
+  useEffect(() => {
+    isAudioEnabledRef.current = isAudioEnabled;
+  }, [isAudioEnabled]);
 
   useEffect(() => {
     if (!state.finished) return;
@@ -289,6 +315,83 @@ function TimerPageInner({
     tap(player);
   };
 
+  // PC: Enter/Spaceキーで手番交代（タップと同等）
+  // クリック後にボタンへフォーカスが移っても、キーのデフォルト(click/scroll)に負けないよう capture で奪う。
+  useEffect(() => {
+    const shouldIgnoreTarget = (target: EventTarget | null) => {
+      if (!target) return false;
+      if (target instanceof HTMLInputElement) return true;
+      if (target instanceof HTMLTextAreaElement) return true;
+      if (target instanceof HTMLSelectElement) return true;
+      if (target instanceof HTMLElement && target.isContentEditable)
+        return true;
+      return false;
+    };
+
+    const preventKeyDefault = (e: KeyboardEvent) => {
+      if (!isTurnSwitchKey(e)) return;
+      if (e.repeat) return;
+      if (e.isComposing) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (shouldIgnoreTarget(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const onKeyDownCapture = (e: KeyboardEvent) => {
+      if (!isTurnSwitchKey(e)) return;
+      if (e.repeat) return;
+      if (e.isComposing) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (shouldIgnoreTarget(e.target)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const s = stateRef.current;
+      if (s.finished) return;
+      if (s.active !== null && !s.running) return;
+
+      // 進行中は「いま動いている側」を押した扱いで相手に手番を渡す。
+      // 未開始(active=null)は右側を押した扱いにして左側から開始する。
+      const playerToTap = s.active ?? rightPlayer;
+
+      const isAudioEnabledNow = isAudioEnabledRef.current;
+      const nextActive = playerToTap === 0 ? 1 : 0;
+      const willSwitch = s.active !== nextActive;
+
+      if (isAudioEnabledNow && s.active === null) {
+        try {
+          void playPublicAudio(SOUND.yoroshiku);
+        } catch {
+          // no-op
+        }
+      }
+
+      if (isAudioEnabledNow && willSwitch) {
+        try {
+          enableBeep();
+          beep();
+        } catch {
+          // no-op
+        }
+      }
+
+      tapRef.current(playerToTap);
+
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDownCapture, true);
+    window.addEventListener("keyup", preventKeyDefault, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDownCapture, true);
+      window.removeEventListener("keyup", preventKeyDefault, true);
+    };
+  }, [rightPlayer]);
+
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col">
       {/* プレイヤー（横並び） */}
@@ -315,7 +418,24 @@ function TimerPageInner({
             <div className="text-6xl font-mono">
               {formatMs(state.players[leftPlayer].remainingMs)}
             </div>
-            <div className="mt-2 text-sm opacity-80">プレイヤー{leftPlayer + 1}</div>
+            <div className="mt-2 text-sm opacity-80">
+              プレイヤー{leftPlayer + 1}
+            </div>
+            <div className="mt-2 text-sm opacity-80">
+              {leftPlayer === 0 ? (
+                <>
+                  持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
+                  {config.time.player1.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
+                  {config.time.player1.fischerSeconds ?? 0}s
+                </>
+              ) : (
+                <>
+                  持ち時間: {config.time.player2.mainSeconds}s / 秒読み:{" "}
+                  {config.time.player2.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
+                  {config.time.player2.fischerSeconds ?? 0}s
+                </>
+              )}
+            </div>
             {state.players[leftPlayer].inByoyomi && (
               <div className="mt-2 text-sm opacity-80">秒読み</div>
             )}
@@ -339,6 +459,21 @@ function TimerPageInner({
             <div className="mt-2 text-sm opacity-80">
               プレイヤー{rightPlayer + 1}
             </div>
+            <div className="mt-2 text-sm opacity-80">
+              {rightPlayer === 0 ? (
+                <>
+                  持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
+                  {config.time.player1.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
+                  {config.time.player1.fischerSeconds ?? 0}s
+                </>
+              ) : (
+                <>
+                  持ち時間: {config.time.player2.mainSeconds}s / 秒読み:{" "}
+                  {config.time.player2.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
+                  {config.time.player2.fischerSeconds ?? 0}s
+                </>
+              )}
+            </div>
             {state.players[rightPlayer].inByoyomi && (
               <div className="mt-2 text-sm opacity-80">秒読み</div>
             )}
@@ -348,14 +483,6 @@ function TimerPageInner({
 
       {/* 操作 */}
       <div className="p-3 space-y-2">
-        <div className="text-center text-xs opacity-70">
-          プレイヤー1 持ち時間: {config.time.player1.mainSeconds}s / 秒読み:{" "}
-          {config.time.player1.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
-          {config.time.player1.fischerSeconds ?? 0}s ｜ プレイヤー2 持ち時間:{" "}
-          {config.time.player2.mainSeconds}s / 秒読み:{" "}
-          {config.time.player2.byoyomiSeconds ?? 0}s / フィッシャー:{" "}
-          {config.time.player2.fischerSeconds ?? 0}s
-        </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
           {state.running ? (
             <IconButton
