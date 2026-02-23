@@ -1,6 +1,7 @@
 export const AppRoute = {
   timer: "/timer",
   settings: "/settings",
+  information: "/information",
 } as const;
 
 type RouteQuery = Record<
@@ -22,5 +23,6 @@ function withQuery(path: string, query?: RouteQuery): string {
 export const appPath = {
   timer: (query?: { rule?: string }) => withQuery(AppRoute.timer, query),
   settings: (query?: { rule?: string }) => withQuery(AppRoute.settings, query),
+  information: () => AppRoute.information,
 } as const;
 

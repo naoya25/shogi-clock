@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FiPause,
   FiPlay,
+  FiInfo,
   FiRepeat,
   FiRotateCcw,
   FiSettings,
@@ -541,6 +542,11 @@ function TimerPageInner({
               announceQueueRef.current = Promise.resolve();
               reset();
             }}
+          />
+          <IconLinkButton
+            label="説明"
+            icon={<FiInfo />}
+            to={appPath.information()}
           />
           <IconLinkButton
             label="設定"
